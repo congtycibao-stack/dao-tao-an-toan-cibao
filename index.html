@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Đào Tạo Ci Bao</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- KHAI BÁO BIẾN MÀU SẮC (THEME) --- */
+        :root {
+            --primary: #0984e3; 
+            --sec: #00cec9; 
+            --dark: #2d3436; 
+            --bg: #dfe6e9;
+            --card-bg: white;
+            --text-color: #2d3436;
+        }
+
+        /* Giao diện VŨ TRỤ (Dark Mode) */
+        [data-theme="space"] {
+            --primary: #a29bfe; /* Tím nhạt */
+            --sec: #e056fd; /* Hồng neon */
+            --dark: #ffffff; /* Chữ trắng */
+            --bg: #1e272e; /* Nền tối */
+            --card-bg: #2d3436; /* Card tối */
+            --text-color: #dfe6e9;
+        }
+
+        /* Giao diện THIÊN NHIÊN (Nature) */
+        [data-theme="nature"] {
+            --primary: #27ae60; /* Xanh lá đậm */
+            --sec: #f1c40f; /* Vàng */
+            --dark: #2c3e50;
+            --bg: #e8f5e9; /* Nền xanh rất nhạt */
+            --card-bg: #ffffff;
+            --text-color: #2d3436;
+        }
+
+        body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text-color); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; transition: all 0.5s ease; }
+        .container { width: 95%; max-width: 1000px; background: var(--card-bg); border-radius: 20px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-top: 15px solid var(--primary); position: relative; height: 95vh; display: flex; flex-direction: column; overflow: hidden; transition: all 0.5s ease; }
+        
+        /* HEADER */
+        .header-info { text-align: center; margin-bottom: 10px; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
+        .company-name { font-family: 'Fredoka One'; color: var(--primary); font-size: 28px; margin: 0; text-transform: uppercase; }
+        .contest-name { font-family: 'Nunito'; color: var(--text-color); font-size: 16px; font-weight: bold; margin: 5px 0; text-transform: uppercase; }
+        
+        /* Ngày thi & Đồng hồ */
+        .date-info { display: flex; justify-content: center; gap: 20px; align-items: center; margin-top: 5px; font-size: 14px; font-weight: bold; }
+        .static-date { color: var(--sec); text-transform: uppercase; }
+        .live-clock { color: #d63031; font-family: monospace; background: rgba(0,0,0,0.1); padding: 2px 10px; border-radius: 10px; }
+
+        .screen { display: none; flex-direction: column; height: 100%; }
+        .active { display: flex; }
+        
+        input, textarea, select { padding: 15px; border-radius: 10px; border: 2px solid #b2bec3; font-size: 16px; margin: 10px 0; outline: none; width: 100%; box-sizing: border-box; background: var(--card-bg); color: var(--text-color); }
+        input:focus, textarea:focus { border-color: var(--primary); }
+        
+        button { padding: 15px; border-radius: 10px; border: none; font-size: 16px; margin: 10px 0; cursor: pointer; font-family: 'Fredoka One'; transition: 0.2s; width: 100%; color: white; box-shadow: 0 4px 0 rgba(0,0,0,0.2); }
+        button:active { transform: translateY(2px); box-shadow: none; }
+        
+        .btn-welcome { font-size: 20px; margin: 20px 0; padding: 20px; }
+        .btn-blue { background: #0984e3; }
+        .btn-green { background: #00b894; }
+        .btn-gray { background: #636e72; }
+        .btn-red { background: #d63031; }
+        .btn-orange { background: #e17055; animation: pulse 2s infinite; }
+        .btn-purple { background: #6c5ce7; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+
+        /* AVATAR GRID */
+        .avatar-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 10px 0; }
+        .avatar-opt { font-size: 30px; text-align: center; border: 2px solid transparent; border-radius: 10px; cursor: pointer; padding: 5px; background: rgba(0,0,0,0.05); }
+        .avatar-opt.selected { border-color: var(--primary); background: var(--primary); transform: scale(1.1); color: white; }
+
+        .game-layout { display: flex; flex: 1; gap: 20px; overflow: hidden; }
+        .left-panel { flex: 4; display: flex; flex-direction: column; overflow-y: auto; background: rgba(0,0,0,0.03); border-radius: 15px; padding: 10px; }
+        .right-panel { flex: 6; display: flex; flex-direction: column; justify-content: center; }
+
+        .racer-card { background: var(--card-bg); padding: 10px; margin-bottom: 8px; border-radius: 8px; border-left: 5px solid #bdc3c7; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 0 rgba(0,0,0,0.1); color: var(--text-color); }
+        .racer-card.finished { border-left-color: #00b894; background: rgba(0, 184, 148, 0.1); }
+        .racer-info { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 14px; }
+        
+        .question-box { background: rgba(255, 234, 167, 0.3); padding: 15px; border-radius: 15px; border: 2px solid #ffeaa7; font-weight: bold; font-size: 16px; text-align: center; margin-bottom: 15px; color: var(--text-color); min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 200px; }
+        .option-btn { background: var(--card-bg); border: 2px solid #b2bec3; color: var(--text-color); font-weight: bold; height: 100%; display: flex; align-items: center; justify-content: center; padding: 10px; cursor: pointer; border-radius: 10px; transition: 0.2s; }
+        .option-btn:hover { border-color: var(--primary); background: rgba(0,0,0,0.05); }
+
+        #lobby-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; padding: 10px; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.03); border-radius: 10px; margin-bottom: 20px; }
+        
+        #admin-panel-ui { display: none; background: rgba(255, 234, 167, 0.5); padding: 15px; border-radius: 15px; border: 2px dashed #fdcb6e; text-align: center; }
+        
+        .excel-area { background: rgba(0, 184, 148, 0.1); padding: 15px; border-radius: 10px; border: 2px dashed var(--primary); margin: 10px 0; text-align: center; }
+
+        #report-header { text-align: center; margin-bottom: 20px; padding: 20px; border-bottom: 2px solid #eee; display: none; background: white; color: black; }
+        #report-header h1 { margin: 0; font-size: 24px; text-transform: uppercase; }
+        #report-header h3 { margin: 5px 0; font-size: 18px; }
+        #report-header p { font-style: italic; margin: 5px 0; }
+
+        @media (max-width: 600px) {
+            .game-layout { flex-direction: column-reverse; }
+            .left-panel { flex: 1; max-height: 120px; }
+            .right-panel { flex: 2; }
+            .options-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body data-theme="default">
+
+<div class="container">
+    <div class="header-info">
+        <h1 class="company-name" id="display-company">ĐANG TẢI...</h1>
+        <div class="contest-name" id="display-contest">...</div>
+        <div class="date-info">
+            <span class="static-date" id="exam-date-label">📅 Ngày thi: ...</span>
+            <span class="live-clock" id="live-clock">--:--:--</span>
+        </div>
+    </div>
+
+    <div id="welcome-screen" class="screen active">
+        <div style="text-align: center; padding: 40px;">
+            <div style="font-size: 60px;">🚀</div>
+            <h2 style="color: var(--primary);">CHÀO MỪNG BẠN!</h2>
+            <p>Vui lòng chọn vai trò để tiếp tục:</p>
+            <button class="btn-welcome btn-blue" onclick="switchScreen('login-screen')">👷 TÔI LÀ THÍ SINH</button>
+            <br>
+            <button class="btn-welcome btn-gray" onclick="enableAdmin()">🔑 TÔI LÀ QUẢN LÝ (ADMIN)</button>
+        </div>
+    </div>
+
+    <div id="login-screen" class="screen">
+        <div style="background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 2px solid var(--primary);">
+            <button onclick="switchScreen('welcome-screen')" style="background:none; color:var(--text-color); width:auto; padding:5px; font-size:12px;">⬅ Quay lại</button>
+            <h2 style="text-align: center; color: var(--primary); margin-top: 0;">NHẬP THÔNG TIN</h2>
+            <input type="text" id="username" placeholder="Nhập Họ và Tên..." maxlength="25">
+            
+            <p style="text-align: center; font-weight: bold; margin-bottom: 5px;">Chọn Nhân Vật:</p>
+            <div class="avatar-grid" id="avatar-container">
+                </div>
+            
+            <button class="btn-green" onclick="joinGame()">✅ XÁC NHẬN VÀO PHÒNG</button>
+        </div>
+    </div>
+
+    <div id="admin-settings-screen" class="screen">
+        <h2 style="text-align: center; color: var(--primary);">CẤU HÌNH HỆ THỐNG</h2>
+        <div style="padding: 20px; background: var(--card-bg); border-radius: 10px; overflow-y: auto; flex:1;">
+            
+            <label>Tên Công Ty:</label><input type="text" id="edit-company-name">
+            <label>Tên Cuộc Thi:</label><input type="text" id="edit-contest-name">
+            
+            <label>Chọn Giao Diện (Theme):</label>
+            <select id="edit-theme">
+                <option value="default">🔵 Mặc Định (Xanh Dương)</option>
+                <option value="space">🌌 Vũ Trụ (Neon/Tối)</option>
+                <option value="nature">🌿 Thiên Nhiên (Xanh Lá)</option>
+            </select>
+
+            <hr style="margin: 20px 0; border-color: #eee;">
+            
+            <label>Cài Đặt Câu Hỏi:</label>
+            <div class="excel-area">
+                <p style="margin:0 0 10px 0; font-weight:bold;">📂 Nạp câu hỏi từ Excel</p>
+                <button onclick="downloadExcelTemplate()" class="btn-purple" style="font-size:14px; width:auto; padding:8px;">⬇️ Tải File Mẫu</button>
+                <div style="margin-top:10px;">
+                    <input type="file" id="excel-upload" accept=".xlsx, .xls" style="padding:5px;" onchange="handleExcelUpload(event)">
+                </div>
+            </div>
+
+            <label>Dữ liệu JSON:</label>
+            <textarea id="edit-questions" style="height:100px; font-family:monospace; background: rgba(0,0,0,0.05);" readonly></textarea>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-blue" style="flex: 1;" onclick="saveSettings()">💾 LƯU CẤU HÌNH</button>
+                <button class="btn-gray" style="flex: 1;" onclick="switchScreen('lobby-screen')">🔙 Về Phòng Điều Khiển</button>
+            </div>
+            <button class="btn-red" style="margin-top: 10px;" onclick="switchScreen('welcome-screen')">🏠 Thoát về Trang Chủ</button>
+        </div>
+    </div>
+
+    <div id="lobby-screen" class="screen">
+        <h2 style="text-align: center; margin: 0; color: var(--text-color);">PHÒNG CHỜ</h2>
+        <p id="player-count" style="text-align: center;">Đang đợi thí sinh...</p>
+        <div id="lobby-list"></div>
+        
+        <div id="admin-panel-ui">
+            <h3 style="color: #d63031; margin: 0 0 10px 0;">🔴 BẢNG ĐIỀU KHIỂN ADMIN</h3>
+            <button class="btn-orange" onclick="startGame()">🏁 BẮT ĐẦU NGAY</button>
+            <div style="display:flex; gap:10px; justify-content:center; margin-top: 10px;">
+                <button onclick="resetGameStatus()" style="background:#b2bec3; width:auto; font-size:14px;">🔄 Reset Phòng</button>
+                <button onclick="switchScreen('admin-settings-screen')" style="background:#636e72; width:auto; font-size:14px;">⚙️ Cấu Hình</button>
+            </div>
+            <button onclick="switchScreen('welcome-screen')" style="background: #2d3436; margin-top: 10px; font-size: 14px;">🚪 Đăng Xuất Admin</button>
+        </div>
+        <p id="waiting-msg" style="text-align: center; margin-top: 20px; color: #888;">Vui lòng chờ Ban tổ chức bắt đầu...</p>
+    </div>
+
+    <div id="game-screen" class="screen">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-weight: bold; color: var(--primary);">⏱️ <span id="timer-display">0.0s</span></span>
+            <span id="question-progress" style="font-weight: bold; color: #888;">--/--</span>
+        </div>
+        <div class="game-layout">
+            <div class="left-panel" id="live-ranking"></div>
+            <div class="right-panel">
+                <div id="player-quiz-area">
+                    <div class="question-box" id="question-text">...</div>
+                    <div class="options-grid" id="options-box"></div>
+                </div>
+                <div id="finished-msg" style="display: none; text-align: center;">
+                    <h2 style="color: #00b894;">✅ ĐÃ NỘP BÀI!</h2>
+                    <p>Hãy chờ các bạn khác hoàn thành.</p>
+                </div>
+                <div id="admin-controls-game" style="display: none; text-align: center;">
+                    <h3>Đang thi đấu...</h3>
+                    <p>Bảng điểm bên trái đang cập nhật theo thời gian thực</p>
+                    <button onclick="endGame()" class="btn-red">🛑 KẾT THÚC VÁN ĐẤU</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="result-screen" class="screen">
+        <div id="report-header">
+            <h1 id="rpt-company">TÊN CÔNG TY</h1>
+            <h3 id="rpt-contest">TÊN CUỘC THI</h3>
+            <p id="rpt-time">Ngày tổ chức: ...</p>
+        </div>
+
+        <h1 id="result-title" style="color: var(--primary); text-align: center;">🏆 KẾT QUẢ 🏆</h1>
+        <div id="final-leaderboard" style="flex: 1; overflow-y: auto; padding: 10px;"></div>
+        
+        <div id="admin-export-area" style="display:none; padding: 10px; background: white; margin-top: 10px; text-align: center; border-radius: 10px;">
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="exportToExcel()" class="btn-purple">📊 Excel Chi Tiết</button>
+                <button onclick="exportToPDF()" class="btn-red">📑 Báo Cáo PDF</button>
+            </div>
+            <button onclick="resetGameStatus()" class="btn-gray" style="margin-top: 10px;">🔄 Tạo Ván Mới</button>
+        </div>
+        <button onclick="location.reload()" class="btn-gray" style="margin-top: 10px;">🏠 Về trang chủ</button>
+    </div>
+</div>
+
+<script>
+    // --- SUPABASE CONFIG ---
+    const SUPABASE_URL = 'https://rngkntylnegpkyoimmia.supabase.co'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuZ2tudHlsbmVncGt5b2ltbWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2MTI1MDksImV4cCI6MjA4NDE4ODUwOX0.ezWLIpWZ_n7ln_IgVeRk7IpG1BNPnLH_NvuS5lh4NP8'; 
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // --- VARIABLES ---
+    const DEFAULT_HSE_QUESTIONS = [ { q: "Thẻ an toàn nhà thầu có giá trị bao lâu?", opts: ["6 tháng", "1 năm", "3 tháng", "Vĩnh viễn"], a: 2 }, { q: "Nộp hồ sơ xin phép trước khi làm bao lâu?", opts: ["1 ngày", "3 ngày", "5 ngày", "7 ngày"], a: 2 }, { q: "Vi phạm an toàn mấy lần thì dừng hợp đồng?", opts: ["1 lần", "2 lần", "3 lần", "4 lần"], a: 1 }, { q: "Ai kiểm soát nhà thầu tại cổng?", opts: ["HSE", "Giám đốc", "Bảo vệ", "Lễ tân"], a: 2 }, { q: "Giấy phép ĐẶC BIỆT cần cho việc gì?", opts: ["Trên cao/Không gian kín", "Vận chuyển nhẹ", "Họp hành", "Đi lại"], a: 0 }, { q: "Chuyển khu vực làm việc khác phải làm gì?", opts: ["Tự đi", "Xin giấy phép mới", "Dùng giấy cũ", "Báo miệng"], a: 1 }, { q: "Đánh giá nhà thầu định kỳ bao lâu 1 lần?", opts: ["3 tháng", "6 tháng", "1 năm", "2 năm"], a: 2 }, { q: "Ai tham gia điều tra tai nạn?", opts: ["Chỉ HSE", "Chỉ Nhà thầu", "Tất cả các bên liên quan", "Công an"], a: 2 }, { q: "Ai chịu trách nhiệm giám sát an toàn?", opts: ["Bảo vệ", "HSE", "Đơn vị SD & Bảo vệ", "Tự giám sát"], a: 2 }, { q: "Thuật ngữ 'Nhà thầu' bao gồm ai?", opts: ["Chỉ xây dựng", "Suất ăn", "Tất cả đối tác", "Giao hàng"], a: 2 } ];
+
+    let myRole = 'player', myId = null, myAvatar = '👷', isAdmin = false, isLoggedIn = false;
+    let currentQuestions = [], myShuffledQuestions = [], currentQIdx = 0;
+    let startTime = 0, timerInterval = null, myAnswerLog = [];
+    let currentCompanyName = "", currentContestName = "", currentTheme = "default";
+
+    const THEME_AVATARS = {
+        'default': ['👷', '👩‍🚒', '👮', '🧑‍🔧', '👩‍🔬', '👨‍🏭'],
+        'space':   ['👽', '🤖', '👾', '🚀', '🧑‍🚀', '☄️'],
+        'nature':  ['🐯', '🦁', '🦊', '🐼', '🐨', '🐸']
+    };
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('live-clock').innerText = now.toLocaleTimeString('vi-VN');
+        document.getElementById('exam-date-label').innerText = "📅 Ngày thi: " + now.toLocaleDateString('vi-VN');
+    }
+    setInterval(updateClock, 1000); updateClock();
+
+    async function initApp() {
+        switchScreen('welcome-screen');
+        const { data: settings } = await supabaseClient.from('app_settings').select('*').eq('id', 1).single();
+        if (settings) {
+            updateHeader(settings.company_name, settings.contest_name);
+            currentQuestions = (settings.question_set && settings.question_set.length > 0) ? settings.question_set : DEFAULT_HSE_QUESTIONS;
+            applyTheme(settings.theme || 'default');
+        } else {
+            currentQuestions = DEFAULT_HSE_QUESTIONS;
+            updateHeader("CÔNG TY TNHH CI BAO", "ĐÀO TẠO AN TOÀN");
+        }
+        subscribeToGame();
+    }
+    
+    function updateHeader(company, contest) {
+        currentCompanyName = company || "TÊN CÔNG TY";
+        currentContestName = contest || "TÊN KHÓA HỌC";
+        document.getElementById('display-company').innerText = currentCompanyName;
+        document.getElementById('display-contest').innerText = currentContestName;
+    }
+
+    function applyTheme(themeName) {
+        currentTheme = themeName;
+        document.body.setAttribute('data-theme', themeName);
+        const grid = document.getElementById('avatar-container');
+        grid.innerHTML = '';
+        const icons = THEME_AVATARS[themeName] || THEME_AVATARS['default'];
+        icons.forEach(icon => {
+            const div = document.createElement('div');
+            div.className = 'avatar-opt'; div.innerText = icon;
+            div.onclick = (e) => {
+                myAvatar = icon;
+                document.querySelectorAll('.avatar-opt').forEach(el => el.classList.remove('selected'));
+                e.target.classList.add('selected');
+            };
+            grid.appendChild(div);
+        });
+        if(icons.length > 0) myAvatar = icons[0];
+    }
+    
+    initApp();
+
+    function enableAdmin() {
+        let pass = prompt("Mật khẩu Quản lý (Gợi ý: 123):");
+        if (pass && pass.trim() === "123") {
+            myRole = 'admin'; isAdmin = true; isLoggedIn = true;
+            alert("Đã vào Admin!");
+            document.getElementById('admin-panel-ui').style.display = 'block';
+            document.getElementById('waiting-msg').style.display = 'none';
+            document.getElementById('player-quiz-area').style.display = 'none';
+            document.getElementById('admin-controls-game').style.display = 'block';
+            document.getElementById('admin-export-area').style.display = 'block';
+            document.getElementById('report-header').style.display = 'block'; 
+            switchScreen('lobby-screen');
+        } else { alert("Sai mật khẩu!"); }
+    }
+
+    async function joinGame() {
+        const name = document.getElementById('username').value.trim();
+        if(!name) return alert("Vui lòng nhập tên!");
+        const { data: state } = await supabaseClient.from('game_state').select('status').single();
+        if(state && state.status === 'PLAYING') return alert("Cuộc thi đang diễn ra! Vui lòng chờ ván sau.");
+        const { data, error } = await supabaseClient
+            .from('players')
+            .insert([{ name: name, avatar: myAvatar, score: 0, progress: 0, time_taken: 0, log: '' }])
+            .select();
+        if(error) return alert("Lỗi kết nối!");
+        myId = data[0].id; isLoggedIn = true;
+        switchScreen('lobby-screen');
+    }
+
+    function subscribeToGame() {
+        supabaseClient.channel('game-flow')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'game_state' }, (payload) => { handleGameStateChange(payload.new); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, (payload) => { updateLiveRanking(); updateLobby(); })
+        .subscribe();
+
+        supabaseClient.channel('settings-change')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_settings' }, (payload) => {
+            const set = payload.new;
+            updateHeader(set.company_name, set.contest_name);
+            currentQuestions = set.question_set;
+            applyTheme(set.theme);
+        })
+        .subscribe();
+        updateLobby();
+    }
+    
+    function handleGameStateChange(state) {
+        if (!isLoggedIn) return; 
+        if (state.status === 'PLAYING') {
+            switchScreen('game-screen');
+            if (!isAdmin) startMyGame();
+        } else if (state.status === 'ENDED') {
+            switchScreen('result-screen');
+            showResults();
+        } else if (state.status === 'LOBBY') {
+            switchScreen('lobby-screen');
+        }
+    }
+
+    function downloadExcelTemplate() {
+        const ws_data = [ ["Câu hỏi (Bắt buộc)", "Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D", "Đáp án đúng (A/B/C/D)"], ["1 + 1 bằng mấy?", "1", "2", "3", "4", "B"], ["Thủ đô VN là?", "Huế", "Đà Nẵng", "Hà Nội", "HCM", "C"] ];
+        const ws = XLSX.utils.aoa_to_sheet(ws_data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "CauHoi");
+        XLSX.writeFile(wb, "Mau_Cau_Hoi_CiBao.xlsx");
+    }
+
+    function handleExcelUpload(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, {header: 1}); 
+            const gameQuestions = [];
+            for(let i=1; i<jsonData.length; i++) {
+                const row = jsonData[i];
+                if(!row[0]) continue; 
+                let correctIndex = 0;
+                const char = row[5] ? row[5].toString().toUpperCase().trim() : "A";
+                if(char === "B") correctIndex = 1; else if(char === "C") correctIndex = 2; else if(char === "D") correctIndex = 3;
+                gameQuestions.push({ q: row[0], opts: [row[1]||"", row[2]||"", row[3]||"", row[4]||""], a: correctIndex });
+            }
+            document.getElementById('edit-questions').value = JSON.stringify(gameQuestions, null, 2);
+            alert(`Đã đọc ${gameQuestions.length} câu hỏi! Bấm LƯU để hoàn tất.`);
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    async function saveSettings() {
+        const newCompany = document.getElementById('edit-company-name').value;
+        const newContest = document.getElementById('edit-contest-name').value;
+        const newTheme = document.getElementById('edit-theme').value;
+        const questionsStr = document.getElementById('edit-questions').value;
+        try {
+            const newQuestions = JSON.parse(questionsStr);
+            await supabaseClient.from('app_settings').update({ company_name: newCompany, contest_name: newContest, question_set: newQuestions, theme: newTheme }).eq('id', 1);
+            alert("Đã lưu cấu hình!");
+        } catch (e) { alert("Lỗi JSON!"); }
+    }
+    
+    async function fetchSettingsForAdmin() {
+        const { data } = await supabaseClient.from('app_settings').select('*').eq('id', 1).single();
+        if(data) {
+            document.getElementById('edit-company-name').value = data.company_name;
+            document.getElementById('edit-contest-name').value = data.contest_name;
+            document.getElementById('edit-theme').value = data.theme || 'default';
+            document.getElementById('edit-questions').value = JSON.stringify(data.question_set, null, 2);
+        }
+    }
+
+    function startMyGame() {
+        if(!currentQuestions || currentQuestions.length === 0) return;
+        myShuffledQuestions = [...currentQuestions].sort(() => Math.random() - 0.5);
+        myAnswerLog = []; currentQIdx = 0; startTime = Date.now();
+        timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - startTime) / 1000).toFixed(1) + 's'; }, 100);
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = myShuffledQuestions[currentQIdx];
+        document.getElementById('question-progress').innerText = `${currentQIdx + 1}/${myShuffledQuestions.length}`;
+        document.getElementById('question-text').innerText = q.q;
+        const optsDiv = document.getElementById('options-box');
+        optsDiv.innerHTML = '';
+        q.opts.forEach((optText, index) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn'; btn.innerText = optText;
+            btn.onclick = () => submitAnswer(index, q.a, optText);
+            optsDiv.appendChild(btn);
+        });
+    }
+
+    async function submitAnswer(chosenIdx, correctIdx, chosenText) {
+        let points = (chosenIdx === correctIdx) ? 10 : 0;
+        myAnswerLog.push({ q: myShuffledQuestions[currentQIdx].q, chosen: chosenText, result: (chosenIdx === correctIdx) ? "Đúng" : "Sai" });
+        const { data: curr } = await supabaseClient.from('players').select('score').eq('id', myId).single();
+        if (curr) await supabaseClient.from('players').update({ score: curr.score + points, progress: Math.floor(((currentQIdx + 1) / myShuffledQuestions.length) * 100) }).eq('id', myId);
+        currentQIdx++;
+        if (currentQIdx < myShuffledQuestions.length) renderQuestion(); else finishMyGame();
+    }
+    
+    async function finishMyGame() {
+        clearInterval(timerInterval);
+        document.getElementById('player-quiz-area').style.display = 'none';
+        document.getElementById('finished-msg').style.display = 'block';
+        await supabaseClient.from('players').update({ time_taken: ((Date.now() - startTime) / 1000), log: JSON.stringify(myAnswerLog) }).eq('id', myId);
+    }
+    
+    async function startGame() { await supabaseClient.from('game_state').update({ status: 'PLAYING' }).eq('id', 1); }
+    async function endGame() { await supabaseClient.from('game_state').update({ status: 'ENDED' }).eq('id', 1); }
+    async function resetGameStatus() {
+        if(confirm("Bạn có chắc muốn Reset?")) {
+            await supabaseClient.from('players').delete().neq('id', 0);
+            await supabaseClient.from('game_state').update({ status: 'LOBBY' }).eq('id', 1);
+            location.reload();
+        }
+    }
+
+    async function updateLobby() {
+        const { data: players } = await supabaseClient.from('players').select('*');
+        const list = document.getElementById('lobby-list');
+        list.innerHTML = '';
+        if(players) {
+            document.getElementById('player-count').innerText = `${players.length} thí sinh đang đợi...`;
+            players.forEach(p => { list.innerHTML += `<div style="background:var(--card-bg); padding:5px; border-radius:8px; text-align:center; border:1px solid #eee; font-size:12px;"><div>${p.avatar}</div><div>${p.name}</div></div>`; });
+        }
+    }
+
+    async function updateLiveRanking() {
+        const { data: players } = await supabaseClient.from('players').select('*').order('score', { ascending: false });
+        const panel = document.getElementById('live-ranking');
+        panel.innerHTML = '';
+        if(!players) return;
+        players.sort((a, b) => {
+            if (a.score !== b.score) return b.score - a.score;
+            if (a.time_taken === 0 && b.time_taken > 0) return 1;
+            if (a.time_taken > 0 && b.time_taken === 0) return -1;
+            return a.time_taken - b.time_taken;
+        });
+        players.forEach((p, i) => {
+            const isFinished = p.progress >= 100;
+            panel.innerHTML += `<div class="racer-card ${isFinished ? 'finished' : ''}"><div class="racer-info"><span>#${i+1}</span><span>${p.avatar} ${p.name}</span></div><div class="racer-stats"><div>${p.score}đ</div><div>${isFinished ? p.time_taken.toFixed(1)+'s' : '...'}</div></div></div>`;
+        });
+    }
+
+    async function showResults() {
+        document.getElementById('rpt-company').innerText = currentCompanyName;
+        document.getElementById('rpt-contest').innerText = currentContestName;
+        document.getElementById('rpt-time').innerText = "Ngày tổ chức: " + new Date().toLocaleDateString('vi-VN');
+
+        const { data: players } = await supabaseClient.from('players').select('*');
+        const board = document.getElementById('final-leaderboard');
+        board.innerHTML = '';
+        if(!players) return;
+        players.sort((a, b) => {
+            if (a.score !== b.score) return b.score - a.score;
+            if (a.time_taken === 0) return 1; 
+            if (b.time_taken === 0) return -1;
+            return a.time_taken - b.time_taken;
+        });
+        players.forEach((p, i) => {
+            let color = i === 0 ? '#fdcb6e' : (i === 1 ? '#b2bec3' : (i === 2 ? '#e17055' : '#fff'));
+            board.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; margin:5px 0; background:${color}; border-radius:8px; font-weight:bold; color:#2d3436;"><span>#${i+1} ${p.avatar} ${p.name}</span><span>${p.score}đ - ${p.time_taken.toFixed(2)}s</span></div>`;
+        });
+    }
+
+    async function exportToExcel() {
+        const { data: players } = await supabaseClient.from('players').select('*').order('score', { ascending: false });
+        const excelData = players.map((p, index) => {
+            let logData = {};
+            try { const logs = p.log ? JSON.parse(p.log) : []; logs.forEach((l, idx) => { logData[`Câu ${idx + 1}`] = `${l.chosen} (${l.result})`; }); } catch (e) {}
+            return { "Hạng": index + 1, "Tên": p.name, "Điểm": p.score, "Thời gian(s)": p.time_taken.toFixed(2), "Ngày": new Date(p.created_at).toLocaleDateString('vi-VN'), ...logData };
+        });
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "KetQua");
+        XLSX.writeFile(wb, "Ket_Qua_Dao_Tao.xlsx");
+    }
+
+    function exportToPDF() {
+        const element = document.getElementById('result-screen');
+        const btnArea = document.getElementById('admin-export-area');
+        const backBtn = document.querySelector('#result-screen > button');
+        const mainHeader = document.querySelector('.header-info'); 
+        btnArea.style.display = 'none'; backBtn.style.display = 'none'; mainHeader.style.display = 'none';
+        html2pdf().set({ margin:0.5, filename:'Bao_Cao_Ket_Qua.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} }).from(document.body).save().then(() => {
+            btnArea.style.display = 'block'; backBtn.style.display = 'block'; mainHeader.style.display = 'block';
+        });
+    }
+
+    function switchScreen(id) { 
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); 
+        document.getElementById(id).classList.add('active'); 
+        if(id === 'admin-settings-screen') fetchSettingsForAdmin();
+    }
+</script>
+
+</body>
+</html>
