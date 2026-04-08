@@ -10,12 +10,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <style>
+        /* --- CSS --- */
         :root { --primary: #0984e3; --sec: #00cec9; --dark: #2d3436; --bg: #dfe6e9; --card-bg: white; --text-color: #2d3436; }
         [data-theme="space"] { --primary: #a29bfe; --sec: #e056fd; --dark: #ffffff; --bg: #1e272e; --card-bg: #2d3436; --text-color: #dfe6e9; }
         [data-theme="nature"] { --primary: #27ae60; --sec: #f1c40f; --dark: #2c3e50; --bg: #e8f5e9; --card-bg: #ffffff; --text-color: #2d3436; }
 
         body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text-color); margin: 0; padding: 20px 10px; min-height: 100vh; box-sizing: border-box; display: block; }
-        .container { width: 100%; max-width: 900px; margin: 0 auto; background: var(--card-bg); border-radius: 20px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-top: 15px solid var(--primary); min-height: 80vh; overflow: visible; }
+        
+        .container { 
+            width: 100%; max-width: 900px; margin: 0 auto; 
+            background: var(--card-bg); border-radius: 20px; padding: 20px; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-top: 15px solid var(--primary); 
+            min-height: 80vh; overflow: visible; 
+        }
         
         .header-info { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
         .company-name { font-family: 'Fredoka One'; color: var(--primary); font-size: 26px; margin: 0; text-transform: uppercase; line-height: 1.2; }
@@ -187,7 +194,8 @@
             </div>
             <button class="btn-orange" onclick="startGame()">🏁 BẮT ĐẦU TÍNH GIỜ</button>
             <div style="display:flex; gap:10px; justify-content:center; margin-top: 10px;">
-                <button onclick="switchScreen('admin-session-screen')" style="background:#636e72; width:auto; font-size:14px;">🔙 Chọn Khóa Khác</button>
+                <button onclick="resetGameStatus()" style="background:#b2bec3; width:auto; font-size:14px;">🔄 Reset Phòng</button>
+                <button onclick="switchScreen('admin-session-screen')" style="background:#636e72; width:auto; font-size:14px;">🔙 Đóng Phòng</button>
             </div>
         </div>
         <p id="waiting-msg" style="text-align: center; margin-top: 20px; color: #888;">Vui lòng chờ Ban tổ chức bắt đầu...</p>
@@ -283,6 +291,7 @@
             document.getElementById('session-select-wrapper').style.display = 'none';
             document.getElementById('session-info-box').style.display = 'block';
             document.getElementById('selected-session-name').innerText = activeSessionName;
+            document.getElementById('display-contest').innerText = activeSessionName;
             switchScreen('login-screen');
         } else {
             alert("Mã QR không hợp lệ hoặc khóa thi đã bị xóa!");
@@ -295,7 +304,6 @@
         if (data) {
             currentCompanyName = data.company_name;
             document.getElementById('display-company').innerText = currentCompanyName;
-            // Xóa tên cuộc thi trên header ở màn hình chủ
             document.getElementById('display-contest').innerText = "HỆ THỐNG ĐÀO TẠO & SÁT HẠCH"; 
             applyTheme(data.theme || 'default');
         }
@@ -303,7 +311,6 @@
 
     function updateHeaderContext() {
         document.getElementById('display-company').innerText = currentCompanyName || "TÊN CÔNG TY";
-        // Chỉ đổi tên phụ đề khi đã vào phòng
         document.getElementById('display-contest').innerText = activeSessionName || "HỆ THỐNG ĐÀO TẠO & SÁT HẠCH";
     }
 
@@ -339,7 +346,8 @@
     // --- ADMIN SESSION ---
     async function loadAllSessions() {
         const { data, error } = await supabaseClient.from('sessions').select('*').order('created_at', {ascending: false});
-        if(error) return;
+        if(error) return alert("Lỗi tải khóa thi: " + error.message);
+        
         const list = document.getElementById('session-list');
         list.innerHTML = '';
         data.forEach(s => {
@@ -364,12 +372,13 @@
     async function createSession() {
         const name = document.getElementById('new-session-name').value.trim();
         if(!name) return alert("Nhập tên khóa thi!");
-        await supabaseClient.from('sessions').insert([{ name: name, status: 'WAITING', question_set: null }]);
+        const { error } = await supabaseClient.from('sessions').insert([{ name: name, status: 'WAITING' }]);
+        if(error) return alert("Lỗi tạo: " + error.message);
         document.getElementById('new-session-name').value = ''; loadAllSessions();
     }
 
     async function deleteSession(id) {
-        if(confirm("Xóa khóa thi sẽ mất hết kết quả của thí sinh. Tiếp tục?")) {
+        if(confirm("Xóa khóa thi sẽ mất hết dữ liệu thi của nhân viên trong khóa này. Bạn có chắc không?")) {
             await supabaseClient.from('players').delete().eq('session_id', id);
             await supabaseClient.from('sessions').delete().eq('id', id);
             loadAllSessions();
@@ -387,9 +396,10 @@
     async function saveSessionQuestions() {
         try {
             const qs = JSON.parse(document.getElementById('edit-session-questions').value);
-            await supabaseClient.from('sessions').update({ question_set: qs }).eq('id', configSessionId);
-            alert("Đã lưu đề thi!");
-        } catch (e) { alert("Lỗi JSON!"); }
+            const {error} = await supabaseClient.from('sessions').update({ question_set: qs }).eq('id', configSessionId);
+            if(error) alert("Lỗi lưu: " + error.message);
+            else alert("Đã lưu đề thi!");
+        } catch (e) { alert("Lỗi JSON! Hãy chắc chắn bạn nạp đúng từ Excel."); }
     }
 
     function handleExcelUpload(e) {
@@ -415,7 +425,7 @@
     function enterSessionAsAdmin(id, name) {
         activeSessionId = id; activeSessionName = name;
         document.getElementById('current-session-name').innerText = name;
-        updateHeaderContext();
+        document.getElementById('display-contest').innerText = name;
         
         const url = window.location.href.split('?')[0] + "?session=" + id;
         document.getElementById('qrcode').innerHTML = "";
@@ -433,7 +443,7 @@
 
     function viewResultAsAdmin(id, name) {
         activeSessionId = id; activeSessionName = name;
-        updateHeaderContext();
+        document.getElementById('display-contest').innerText = name;
         document.getElementById('admin-export-area').style.display = 'block';
         document.getElementById('player-home-btn').style.display = 'none';
         switchScreen('result-screen');
@@ -465,6 +475,7 @@
         activeSessionId = select.value;
         if(activeSessionId) {
             activeSessionName = select.options[select.selectedIndex].text;
+            document.getElementById('display-contest').innerText = activeSessionName;
         }
     }
 
@@ -476,7 +487,7 @@
         
         activeSessionName = sess.name;
         currentQuestions = sess.question_set || DEFAULT_QUESTIONS;
-        updateHeaderContext(); // Cập nhật tên phòng lên header
+        updateHeaderContext(); 
 
         const empId = document.getElementById('employee-id').value.trim();
         const name = document.getElementById('username').value.trim();
@@ -486,7 +497,7 @@
         const { data: existing } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).eq('employee_id', empId).single();
         
         if (sess.status === 'PLAYING' && !existing) {
-             return alert("Cuộc thi đang diễn ra, bạn không thể vào mới lúc này!");
+             return alert("Cuộc thi đang diễn ra, người mới không thể tham gia lúc này!");
         }
 
         if (existing) {
@@ -501,7 +512,7 @@
         }
         
         isLoggedIn = true;
-        document.getElementById('player-edit-btn').style.display = 'block';
+        document.getElementById('player-edit-btn').style.display = 'block'; 
         document.getElementById('admin-panel-ui').style.display = 'none'; 
         switchScreen('lobby-screen');
         subscribeToSession();
@@ -512,14 +523,28 @@
         switchScreen('login-screen');
     }
 
-    // --- GAMEPLAY ---
+    // --- GAMEPLAY & REALTIME ---
     function subscribeToSession() {
         if(!activeSessionId) return;
         supabaseClient.channel('sess-'+activeSessionId)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions', filter: `id=eq.${activeSessionId}` }, payload => handleSessionChange(payload.new))
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'players', filter: `session_id=eq.${activeSessionId}` }, () => { updateLiveRanking(); updateLobby(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'players', filter: `session_id=eq.${activeSessionId}` }, (payload) => { 
+            // Xử lý nếu player bị Admin kích ra
+            if (payload.eventType === 'DELETE' && payload.old && payload.old.id === myId) {
+                alert("Bạn đã bị Quản trị viên mời ra khỏi phòng!");
+                isLoggedIn = false;
+                activeSessionId = null;
+                activeSessionName = "";
+                updateHeaderContext();
+                switchScreen('welcome-screen');
+                return;
+            }
+            updateLiveRanking(); 
+            updateLobby(); 
+        })
         .subscribe();
         
+        // Listen settings changes
         supabaseClient.channel('settings').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_settings' }, (payload) => {
              document.getElementById('display-company').innerText = payload.new.company_name;
              applyTheme(payload.new.theme);
@@ -587,23 +612,55 @@
     // --- CONTROLS ---
     async function startGame() { await supabaseClient.from('sessions').update({ status: 'PLAYING' }).eq('id', activeSessionId); }
     async function endGame() { await supabaseClient.from('sessions').update({ status: 'ENDED' }).eq('id', activeSessionId); }
+    async function resetGameStatus() { 
+        if(confirm("Reset sẽ xóa hết người chơi trong phòng này?")) { 
+            await supabaseClient.from('players').delete().eq('session_id', activeSessionId); 
+            await supabaseClient.from('sessions').update({ status: 'WAITING' }).eq('id', activeSessionId); 
+            updateLobby(); 
+        } 
+    }
+
+    // HÀM MỚI: Kích người chơi
+    async function kickPlayer(playerId, playerName) {
+        if(confirm(`Bạn có chắc muốn kích thí sinh [${playerName}] ra khỏi phòng?`)) {
+            await supabaseClient.from('players').delete().eq('id', playerId);
+        }
+    }
 
     // --- UI HELPERS ---
     async function updateLobby() {
         if(!activeSessionId) return;
         const { data } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId);
-        document.getElementById('lobby-list').innerHTML = data.map(p => `<div style="background:var(--card-bg);padding:5px;border-radius:8px;text-align:center;border:1px solid #ccc;color:var(--text-color);"><div>${p.avatar}</div><div style="font-size:12px;font-weight:bold;">${p.employee_id}</div><div style="font-size:12px;">${p.name}</div></div>`).join('');
-        document.getElementById('player-count').innerText = `${data.length} người chờ...`;
+        const list = document.getElementById('lobby-list');
+        list.innerHTML = '';
+        if(data) {
+            document.getElementById('player-count').innerText = `${data.length} thí sinh đang đợi...`;
+            data.forEach(p => { 
+                // Admin sẽ thấy thêm nút Kích
+                let kickBtn = isAdmin ? `<button onclick="kickPlayer(${p.id}, '${p.name}')" style="background:#e17055; color:white; border:none; border-radius:5px; padding:3px; font-size:11px; margin-top:5px; cursor:pointer; width:100%;">❌ Đuổi</button>` : '';
+                
+                list.innerHTML += `
+                    <div style="background:var(--card-bg);padding:8px;border-radius:8px;text-align:center;border:1px solid #ccc;color:var(--text-color);">
+                        <div>${p.avatar}</div>
+                        <div style="font-size:12px;font-weight:bold;color:var(--primary);">${p.employee_id}</div>
+                        <div style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+                        ${kickBtn}
+                    </div>`; 
+            });
+        }
     }
 
     async function updateLiveRanking() {
         if(!activeSessionId) return;
-        const { data } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).order('score', {ascending:false});
-        const html = data.map((p, i) => {
-            const done = p.progress >= 100;
-            return `<div class="racer-card ${done?'finished':''}"><div class="racer-info"><span>#${i+1}</span><span>${p.avatar} ${p.name}</span></div><div class="racer-stats"><div>${p.score}đ</div><div>${done?p.time_taken.toFixed(1)+'s':'...'}</div></div></div>`;
-        }).join('');
-        document.getElementById('live-ranking').innerHTML = html;
+        const { data: players } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).order('score', {ascending:false});
+        const panel = document.getElementById('live-ranking');
+        panel.innerHTML = '';
+        if(!players) return;
+        players.sort((a, b) => { if (a.score !== b.score) return b.score - a.score; if (a.time_taken === 0 && b.time_taken > 0) return 1; if (a.time_taken > 0 && b.time_taken === 0) return -1; return a.time_taken - b.time_taken; });
+        players.forEach((p, i) => {
+            const isFinished = p.progress >= 100;
+            panel.innerHTML += `<div class="racer-card ${isFinished ? 'finished' : ''}"><div class="racer-info"><span>#${i+1}</span><span>${p.avatar} ${p.name}</span></div><div class="racer-stats"><div>${p.score}đ</div><div>${isFinished ? p.time_taken.toFixed(1)+'s' : '...'}</div></div></div>`;
+        });
     }
 
     async function showResults() {
@@ -611,12 +668,15 @@
         document.getElementById('rpt-company').innerText = currentCompanyName;
         document.getElementById('rpt-contest').innerText = activeSessionName;
         document.getElementById('rpt-time').innerText = "Ngày tổ chức: " + new Date().toLocaleDateString('vi-VN');
-        const { data } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).order('score', {ascending:false});
-        const html = data.map((p, i) => {
+        const { data: players } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId);
+        const board = document.getElementById('final-leaderboard');
+        board.innerHTML = '';
+        if(!players) return;
+        players.sort((a, b) => { if (a.score !== b.score) return b.score - a.score; if (a.time_taken === 0) return 1; if (b.time_taken === 0) return -1; return a.time_taken - b.time_taken; });
+        players.forEach((p, i) => {
             let color = i === 0 ? '#fdcb6e' : (i === 1 ? '#b2bec3' : (i === 2 ? '#e17055' : 'var(--card-bg)'));
-            return `<div style="display:flex; justify-content:space-between; padding:15px; margin:5px 0; background:${color}; border-radius:8px; font-weight:bold; border:1px solid #ccc;"><span>#${i+1} ${p.avatar} ${p.name} (${p.employee_id})</span><span>${p.score}đ - ${p.time_taken.toFixed(2)}s</span></div>`;
-        }).join('');
-        document.getElementById('final-leaderboard').innerHTML = html;
+            board.innerHTML += `<div style="display:flex; justify-content:space-between; padding:15px; margin:5px 0; background:${color}; border-radius:8px; font-weight:bold; border:1px solid #ccc;"><span>#${i+1} ${p.avatar} ${p.name} (${p.employee_id})</span><span>${p.score}đ - ${p.time_taken.toFixed(2)}s</span></div>`;
+        });
     }
 
     function downloadExcelTemplate() {
@@ -625,23 +685,24 @@
     }
 
     async function exportToExcel() {
-        const { data } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).order('score', {ascending:false});
-        const ex = data.map((p,i) => {
-            let l = {}; try { const gs=JSON.parse(p.log); gs.forEach((g,j)=>{l[`Câu ${j+1}`]=`${g.chosen} (${g.result})`;}); } catch(e){}
-            return { "Hạng":i+1, "Số Thẻ":p.employee_id, "Tên":p.name, "Điểm":p.score, "TG":p.time_taken.toFixed(2), ...l };
+        const { data: players } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).order('score', {ascending:false});
+        const excelData = players.map((p, index) => {
+            let logData = {}; try { const logs = p.log ? JSON.parse(p.log) : []; logs.forEach((l, idx) => { logData[`Câu ${idx + 1}`] = `${l.chosen} (${l.result})`; }); } catch (e) {}
+            return { "Hạng": index + 1, "Số Thẻ": p.employee_id, "Tên": p.name, "Điểm": p.score, "TG": p.time_taken.toFixed(2), ...logData };
         });
-        const ws = XLSX.utils.json_to_sheet(ex); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "KQ"); XLSX.writeFile(wb, `KetQua_${activeSessionName}.xlsx`);
+        const ws = XLSX.utils.json_to_sheet(excelData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "KQ"); XLSX.writeFile(wb, `KetQua_${activeSessionName}.xlsx`);
     }
 
     function exportToPDF() {
         const el = document.getElementById('result-screen');
-        document.getElementById('admin-export-area').style.display = 'none';
-        document.querySelector('.header-info').style.display = 'none';
+        const btnArea = document.getElementById('admin-export-area');
+        const backBtn = document.getElementById('player-home-btn'); 
+        const mainHeader = document.querySelector('.header-info');
+        btnArea.style.display = 'none'; backBtn.style.display = 'none'; mainHeader.style.display = 'none';
         document.getElementById('report-header').style.display = 'block';
         
         html2pdf().set({ margin:0.5, filename:`BaoCao_${activeSessionName}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} }).from(document.body).save().then(()=>{
-            document.getElementById('admin-export-area').style.display = 'block';
-            document.querySelector('.header-info').style.display = 'block';
+            btnArea.style.display = 'block'; backBtn.style.display = 'block'; mainHeader.style.display = 'block';
             document.getElementById('report-header').style.display = 'none';
         });
     }
@@ -651,7 +712,6 @@
         document.getElementById(id).classList.add('active'); 
         if(id === 'admin-settings-screen') fetchSettingsForAdmin();
         if(id === 'welcome-screen') {
-            // Khi về trang chủ thì tự reset tên phòng trên header
             activeSessionId = null; activeSessionName = ""; updateHeaderContext();
         }
     }
