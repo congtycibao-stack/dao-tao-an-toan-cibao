@@ -10,22 +10,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        /* --- CSS --- */
         :root { --primary: #0984e3; --sec: #00cec9; --dark: #2d3436; --bg: #dfe6e9; --card-bg: white; --text-color: #2d3436; }
         [data-theme="space"] { --primary: #a29bfe; --sec: #e056fd; --dark: #ffffff; --bg: #1e272e; --card-bg: #2d3436; --text-color: #dfe6e9; }
         [data-theme="nature"] { --primary: #27ae60; --sec: #f1c40f; --dark: #2c3e50; --bg: #e8f5e9; --card-bg: #ffffff; --text-color: #2d3436; }
 
-        /* Sửa lỗi cuộn trang: Cho phép body cuộn tự nhiên */
         body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--text-color); margin: 0; padding: 20px 10px; min-height: 100vh; box-sizing: border-box; display: block; }
-        
-        .container { 
-            width: 100%; max-width: 900px; margin: 0 auto; 
-            background: var(--card-bg); border-radius: 20px; padding: 20px; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-top: 15px solid var(--primary); 
-            /* Bỏ height cố định để nội dung tự đẩy xuống */
-            min-height: 80vh; 
-            overflow: visible; 
-        }
+        .container { width: 100%; max-width: 900px; margin: 0 auto; background: var(--card-bg); border-radius: 20px; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border-top: 15px solid var(--primary); min-height: 80vh; overflow: visible; }
         
         .header-info { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #ccc; padding-bottom: 10px; }
         .company-name { font-family: 'Fredoka One'; color: var(--primary); font-size: 26px; margin: 0; text-transform: uppercase; line-height: 1.2; }
@@ -47,7 +37,6 @@
         .btn-icon { padding: 5px 10px; width: auto; margin: 0 2px; font-size: 12px; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
 
-        /* Avatar Grid Responsive */
         .avatar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 10px; margin: 15px 0; }
         .avatar-opt { font-size: 35px; text-align: center; border: 2px solid transparent; border-radius: 10px; cursor: pointer; padding: 5px; background: rgba(0,0,0,0.05); }
         .avatar-opt.selected { border-color: var(--primary); background: var(--primary); transform: scale(1.1); color: white; }
@@ -65,22 +54,18 @@
         .option-btn:hover { border-color: var(--primary); background: rgba(0,0,0,0.05); }
 
         #lobby-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; padding: 10px; max-height: 400px; overflow-y: auto; background: rgba(0,0,0,0.03); border-radius: 10px; margin-bottom: 20px; }
-        
         #admin-panel-ui { display: none; background: rgba(255, 234, 167, 0.5); padding: 15px; border-radius: 15px; border: 2px dashed #fdcb6e; text-align: center; margin-top: 10px; }
-        
         #session-list { max-height: 400px; overflow-y: auto; }
         .session-item { background: var(--card-bg); padding: 15px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #ccc; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
         .session-item:hover { border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         
         .excel-area { background: rgba(0, 184, 148, 0.1); padding: 15px; border-radius: 10px; border: 2px dashed var(--primary); margin: 10px 0; text-align: center; }
-        
         #qr-container { display: flex; justify-content: center; margin-bottom: 15px; }
         #qr-code { padding: 10px; background: white; border-radius: 10px; display: inline-block; }
 
         #report-header { text-align: center; margin-bottom: 20px; padding: 20px; border-bottom: 2px solid #eee; display: none; background: white; color: black; }
         #report-header h1 { margin: 0; font-size: 24px; text-transform: uppercase; }
 
-        /* Responsive */
         @media (min-width: 768px) {
             .game-layout { flex-direction: row; }
             .left-panel { max-height: none; }
@@ -93,7 +78,7 @@
 <div class="container">
     <div class="header-info">
         <h1 class="company-name" id="display-company">ĐANG TẢI...</h1>
-        <div class="contest-name" id="display-contest">...</div>
+        <div class="contest-name" id="display-contest">HỆ THỐNG ĐÀO TẠO & SÁT HẠCH</div>
         <div class="date-info">
             <span id="exam-date-label">📅 ...</span>
             <span class="live-clock" id="live-clock">--:--:--</span>
@@ -124,8 +109,8 @@
             </div>
 
             <div id="session-select-wrapper" style="margin-bottom: 15px;">
-                <label style="font-weight:bold; color:#d63031;">⚠️ Chọn Khóa Thi:</label>
-                <select id="active-session-select" onchange="onSessionSelectChange()"></select>
+                <label style="font-weight:bold; color:#d63031;">⚠️ Chọn Khóa Thi Đang Mở:</label>
+                <select id="active-session-select" style="background: #ffeaa7; color: black; font-weight: bold; width: 100%; padding: 10px;" onchange="onSessionSelectChange()"></select>
             </div>
 
             <label>Số thẻ (5 số): <span style="color:red">*</span></label>
@@ -186,7 +171,7 @@
 
     <div id="lobby-screen" class="screen">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <button id="player-edit-btn" onclick="editPlayerInfo()" style="width:auto; background: #e17055; font-size: 14px;">✏️ Sửa Thông Tin / Thoát</button>
+            <button id="player-edit-btn" onclick="editPlayerInfo()" style="width:auto; background: #e17055; font-size: 14px;">✏️ Sửa Thông Tin / Lùi Lại</button>
         </div>
 
         <h2 id="lobby-title" style="text-align: center; margin: 10px 0; color: var(--text-color);">PHÒNG CHỜ</h2>
@@ -222,7 +207,7 @@
                 </div>
                 <div id="finished-msg" style="display: none; text-align: center;">
                     <h2 style="color: #00b894;">✅ HOÀN THÀNH!</h2>
-                    <p>Hãy chờ các bạn khác hoàn thành.</p>
+                    <p>Hãy chờ các bạn khác.</p>
                 </div>
                 <div id="admin-controls-game" style="display: none; text-align: center;">
                     <h3>Đang thi đấu...</h3>
@@ -233,7 +218,7 @@
     </div>
 
     <div id="result-screen" class="screen">
-        <div id="report-header" style="display:none; text-align:center;">
+        <div id="report-header">
             <h1 id="rpt-company">...</h1>
             <h3 id="rpt-contest">...</h3>
             <p id="rpt-time">...</p>
@@ -245,12 +230,12 @@
             <button onclick="exportToPDF()" class="btn-red" style="width:48%">PDF</button>
             <button onclick="switchScreen('admin-session-screen')" class="btn-gray" style="margin-top:10px;">🔙 Danh Sách Khóa Thi</button>
         </div>
-        <button id="player-home-btn" onclick="location.reload()" class="btn-gray" style="margin-top:10px;">🏠 Về trang chủ</button>
+        <button id="player-home-btn" onclick="location.reload()" class="btn-gray" style="margin-top:10px;">🏠 Về Trang Chủ</button>
     </div>
 </div>
 
 <script>
-    // --- CONFIG ---
+    // --- SUPABASE CONFIG ---
     const SUPABASE_URL = 'https://rngkntylnegpkyoimmia.supabase.co'; 
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJuZ2tudHlsbmVncGt5b2ltbWlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2MTI1MDksImV4cCI6MjA4NDE4ODUwOX0.ezWLIpWZ_n7ln_IgVeRk7IpG1BNPnLH_NvuS5lh4NP8'; 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -265,7 +250,8 @@
     let myRole = 'player', myId = null, myAvatar = '👷', isAdmin = false, isLoggedIn = false;
     let currentQuestions = [], myShuffledQuestions = [], currentQIdx = 0;
     let startTime = 0, timerInterval = null, myAnswerLog = [];
-    let currentCompanyName = "CÔNG TY", activeSessionId = null, activeSessionName = "";
+    let currentCompanyName = "CÔNG TY", currentTheme = "default";
+    let activeSessionId = null, activeSessionName = "";
     let configSessionId = null;
 
     function updateClock() {
@@ -279,32 +265,24 @@
         switchScreen('welcome-screen');
         await loadGlobalSettings();
         
-        // Kiểm tra mã QR
         const urlParams = new URLSearchParams(window.location.search);
         const sessParam = urlParams.get('session');
-        
         if (sessParam) { 
-            // Nếu có mã QR, nạp thông tin khóa thi ngay lập tức
-            checkSessionAndRedirect(sessParam);
+            await checkSessionAndRedirect(sessParam);
         } else { 
-            // Nếu không có, nạp danh sách để chọn
             loadActiveSessionsForPlayer(); 
         }
     }
     
-    // Hàm nạp thông tin từ QR Code
     async function checkSessionAndRedirect(sessionId) {
         const { data } = await supabaseClient.from('sessions').select('id, name, status').eq('id', sessionId).single();
         if (data) {
             activeSessionId = data.id;
             activeSessionName = data.name;
             
-            // Cập nhật giao diện Đăng nhập
-            document.getElementById('session-select-wrapper').style.display = 'none'; // Ẩn dropdown
-            document.getElementById('session-info-box').style.display = 'block'; // Hiện box thông tin
+            document.getElementById('session-select-wrapper').style.display = 'none';
+            document.getElementById('session-info-box').style.display = 'block';
             document.getElementById('selected-session-name').innerText = activeSessionName;
-            document.getElementById('display-contest').innerText = activeSessionName;
-            
             switchScreen('login-screen');
         } else {
             alert("Mã QR không hợp lệ hoặc khóa thi đã bị xóa!");
@@ -317,8 +295,16 @@
         if (data) {
             currentCompanyName = data.company_name;
             document.getElementById('display-company').innerText = currentCompanyName;
+            // Xóa tên cuộc thi trên header ở màn hình chủ
+            document.getElementById('display-contest').innerText = "HỆ THỐNG ĐÀO TẠO & SÁT HẠCH"; 
             applyTheme(data.theme || 'default');
         }
+    }
+
+    function updateHeaderContext() {
+        document.getElementById('display-company').innerText = currentCompanyName || "TÊN CÔNG TY";
+        // Chỉ đổi tên phụ đề khi đã vào phòng
+        document.getElementById('display-contest').innerText = activeSessionName || "HỆ THỐNG ĐÀO TẠO & SÁT HẠCH";
     }
 
     function applyTheme(themeName) {
@@ -342,7 +328,7 @@
     initApp();
 
     function enableAdmin() {
-        let pass = prompt("Mật khẩu Quản lý:");
+        let pass = prompt("Mật khẩu Quản lý (123):");
         if (pass === "123") {
             myRole = 'admin'; isAdmin = true; isLoggedIn = true;
             switchScreen('admin-session-screen');
@@ -350,49 +336,40 @@
         } else { alert("Sai mật khẩu!"); }
     }
 
-    // --- SESSION MANAGEMENT ---
+    // --- ADMIN SESSION ---
     async function loadAllSessions() {
-        const { data: sessions } = await supabaseClient.from('sessions').select('*').order('created_at', {ascending: false});
+        const { data, error } = await supabaseClient.from('sessions').select('*').order('created_at', {ascending: false});
+        if(error) return;
         const list = document.getElementById('session-list');
         list.innerHTML = '';
-        sessions.forEach(s => {
+        data.forEach(s => {
             const div = document.createElement('div');
             div.className = 'session-item';
             let statusColor = s.status === 'PLAYING' ? 'red' : (s.status === 'ENDED' ? 'gray' : 'green');
             
-            let actionBtns = `
-                <div class="session-actions">
-                    <button class="btn-icon btn-blue" onclick="event.stopPropagation(); configureSession('${s.id}', '${s.name}')">⚙️</button>
-                    <button class="btn-icon btn-red" onclick="event.stopPropagation(); deleteSession('${s.id}')">🗑️</button>
-                </div>`;
-            
-            let enterBtn = "";
+            let btns = `<div style="display:flex;">`;
             if (s.status === 'ENDED') {
-                enterBtn = `<button class="btn-icon btn-purple" onclick="viewResultAsAdmin('${s.id}', '${s.name}')">📊 KQ</button>`;
+                btns += `<button class="btn-icon btn-purple" onclick="viewResultAsAdmin('${s.id}', '${s.name}')">📊 KQ</button>`;
             } else {
-                enterBtn = `<button class="btn-icon btn-green" onclick="enterSessionAsAdmin('${s.id}', '${s.name}')">➡️ Vào</button>`;
+                btns += `<button class="btn-icon btn-green" onclick="enterSessionAsAdmin('${s.id}', '${s.name}')">➡️ Vào</button>`;
             }
-
-            div.innerHTML = `
-                <div class="session-info" onclick="enterSessionAsAdmin('${s.id}', '${s.name}')">
-                    <b>${s.name}</b> <br>
-                    <span style="font-size:12px;color:${statusColor}">${s.status} - ${new Date(s.created_at).toLocaleDateString()}</span>
-                </div>
-                <div style="display:flex; gap:5px; align-items:center;">${enterBtn}${actionBtns}</div>
-            `;
+            btns += `<button class="btn-icon btn-blue" onclick="configureSession('${s.id}', '${s.name}')">⚙️ Đề</button>
+                     <button class="btn-icon btn-red" onclick="deleteSession('${s.id}')">🗑️</button></div>`;
+            
+            div.innerHTML = `<div class="session-info"><b>${s.name}</b><br><span style="font-size:12px;color:${statusColor}">${s.status}</span></div>${btns}`;
             list.appendChild(div);
         });
     }
 
     async function createSession() {
         const name = document.getElementById('new-session-name').value.trim();
-        if(!name) return alert("Nhập tên!");
+        if(!name) return alert("Nhập tên khóa thi!");
         await supabaseClient.from('sessions').insert([{ name: name, status: 'WAITING', question_set: null }]);
         document.getElementById('new-session-name').value = ''; loadAllSessions();
     }
 
     async function deleteSession(id) {
-        if(confirm("Xóa khóa thi?")) {
+        if(confirm("Xóa khóa thi sẽ mất hết kết quả của thí sinh. Tiếp tục?")) {
             await supabaseClient.from('players').delete().eq('session_id', id);
             await supabaseClient.from('sessions').delete().eq('id', id);
             loadAllSessions();
@@ -430,7 +407,7 @@
                 qs.push({ q: r[0], opts: [r[1]||"", r[2]||"", r[3]||"", r[4]||""], a: c });
             }
             document.getElementById('edit-session-questions').value = JSON.stringify(qs, null, 2);
-            alert(`Đã đọc ${qs.length} câu hỏi! Bấm LƯU.`);
+            alert(`Đã nạp ${qs.length} câu hỏi! Bấm LƯU ĐỀ THI.`);
         };
         reader.readAsArrayBuffer(file);
     }
@@ -438,17 +415,17 @@
     function enterSessionAsAdmin(id, name) {
         activeSessionId = id; activeSessionName = name;
         document.getElementById('current-session-name').innerText = name;
-        document.getElementById('display-contest').innerText = name;
+        updateHeaderContext();
         
-        // QR Code Link
         const url = window.location.href.split('?')[0] + "?session=" + id;
         document.getElementById('qrcode').innerHTML = "";
         new QRCode(document.getElementById("qrcode"), { text: url, width: 128, height: 128 });
 
         document.getElementById('admin-panel-ui').style.display = 'block';
-        document.getElementById('player-edit-btn').style.display = 'none'; // Ẩn nút sửa của player
+        document.getElementById('player-edit-btn').style.display = 'none'; 
         document.getElementById('player-quiz-area').style.display = 'none';
         document.getElementById('admin-controls-game').style.display = 'block';
+        document.getElementById('admin-export-area').style.display = 'block';
         
         switchScreen('lobby-screen');
         subscribeToSession();
@@ -456,7 +433,7 @@
 
     function viewResultAsAdmin(id, name) {
         activeSessionId = id; activeSessionName = name;
-        document.getElementById('display-contest').innerText = name;
+        updateHeaderContext();
         document.getElementById('admin-export-area').style.display = 'block';
         document.getElementById('player-home-btn').style.display = 'none';
         switchScreen('result-screen');
@@ -467,19 +444,18 @@
         const cName = document.getElementById('edit-company-name').value;
         const theme = document.getElementById('edit-theme').value;
         await supabaseClient.from('app_settings').update({ company_name: cName, theme: theme }).eq('id', 1);
-        alert("Đã lưu!");
+        alert("Đã lưu cấu hình chung!");
     }
 
-    // --- PLAYER LOGIN ---
+    // --- PLAYER ---
     async function loadActiveSessionsForPlayer() {
-        const { data: sessions } = await supabaseClient.from('sessions').select('*').in('status', ['WAITING', 'PLAYING']);
+        const { data } = await supabaseClient.from('sessions').select('*').in('status', ['WAITING', 'PLAYING']);
         const select = document.getElementById('active-session-select');
         select.innerHTML = '<option value="">-- Chọn Khóa Thi --</option>';
-        if(sessions && sessions.length > 0) {
+        if(data && data.length > 0) {
             document.getElementById('session-select-wrapper').style.display = 'block';
-            sessions.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.name}</option>`; });
+            data.forEach(s => { select.innerHTML += `<option value="${s.id}">${s.name}</option>`; });
         } else {
-            // Không có phòng nào mở
             document.getElementById('session-select-wrapper').style.display = 'none';
         }
     }
@@ -489,7 +465,6 @@
         activeSessionId = select.value;
         if(activeSessionId) {
             activeSessionName = select.options[select.selectedIndex].text;
-            document.getElementById('display-contest').innerText = activeSessionName;
         }
     }
 
@@ -501,27 +476,23 @@
         
         activeSessionName = sess.name;
         currentQuestions = sess.question_set || DEFAULT_QUESTIONS;
-        document.getElementById('display-contest').innerText = sess.name;
+        updateHeaderContext(); // Cập nhật tên phòng lên header
 
         const empId = document.getElementById('employee-id').value.trim();
         const name = document.getElementById('username').value.trim();
         if(!/^\d{5}$/.test(empId)) return alert("Số thẻ phải đúng 5 chữ số!");
-        if(!name) return alert("Nhập tên!");
+        if(!name) return alert("Vui lòng nhập tên!");
 
-        if(sess.status === 'PLAYING') {
-            // Nếu game đang chạy, kiểm tra xem có phải người cũ không
-            const { data: check } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).eq('employee_id', empId).single();
-            if(!check) return alert("Cuộc thi đang diễn ra, bạn không thể vào mới!");
+        const { data: existing } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).eq('employee_id', empId).single();
+        
+        if (sess.status === 'PLAYING' && !existing) {
+             return alert("Cuộc thi đang diễn ra, bạn không thể vào mới lúc này!");
         }
 
-        // Logic Reconnect / Update
-        const { data: existing } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).eq('employee_id', empId).single();
         if (existing) {
-            // Cập nhật tên mới, avatar mới, giữ nguyên điểm
             await supabaseClient.from('players').update({ name: name, avatar: myAvatar }).eq('id', existing.id);
             myId = existing.id;
         } else {
-            // Tạo mới
             const { data: newUser, error } = await supabaseClient.from('players').insert([{
                 session_id: activeSessionId, employee_id: empId, name: name, avatar: myAvatar, score: 0, progress: 0, time_taken: 0, log: ''
             }]).select().single();
@@ -530,18 +501,15 @@
         }
         
         isLoggedIn = true;
-        document.getElementById('player-edit-btn').style.display = 'block'; // Hiện nút sửa
-        document.getElementById('admin-panel-ui').style.display = 'none'; // Ẩn panel admin
+        document.getElementById('player-edit-btn').style.display = 'block';
+        document.getElementById('admin-panel-ui').style.display = 'none'; 
         switchScreen('lobby-screen');
         subscribeToSession();
     }
 
-    // Chức năng: Sửa thông tin (Quay lại Login)
     function editPlayerInfo() {
-        if(confirm("Bạn muốn quay lại sửa thông tin?")) {
-            isLoggedIn = false;
-            switchScreen('login-screen');
-        }
+        isLoggedIn = false; 
+        switchScreen('login-screen');
     }
 
     // --- GAMEPLAY ---
@@ -551,24 +519,41 @@
         .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions', filter: `id=eq.${activeSessionId}` }, payload => handleSessionChange(payload.new))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'players', filter: `session_id=eq.${activeSessionId}` }, () => { updateLiveRanking(); updateLobby(); })
         .subscribe();
+        
+        supabaseClient.channel('settings').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_settings' }, (payload) => {
+             document.getElementById('display-company').innerText = payload.new.company_name;
+             applyTheme(payload.new.theme);
+        }).subscribe();
+
         updateLobby();
-        // Check state immediately
         supabaseClient.from('sessions').select('status').eq('id', activeSessionId).single().then(({data}) => { if(data) handleSessionChange(data); });
     }
 
     function handleSessionChange(s) {
         if(!isLoggedIn) return;
-        if(s.status === 'PLAYING') { switchScreen('game-screen'); if(!isAdmin) startMyGame(); }
-        else if(s.status === 'ENDED') { switchScreen('result-screen'); showResults(); }
-        else if(s.status === 'WAITING') { switchScreen('lobby-screen'); }
+        if(s.status === 'PLAYING') { 
+            switchScreen('game-screen'); 
+            if(!isAdmin) startMyGame(); 
+        } else if(s.status === 'ENDED') { 
+            switchScreen('result-screen'); showResults(); 
+        } else if(s.status === 'WAITING') { 
+            switchScreen('lobby-screen'); 
+        }
     }
 
     function startMyGame() {
-        if(!currentQuestions || currentQuestions.length === 0) return;
-        myShuffledQuestions = [...currentQuestions].sort(()=>Math.random()-0.5);
-        myAnswerLog = []; currentQIdx = 0; startTime = Date.now();
-        timerInterval = setInterval(()=> { document.getElementById('timer-display').innerText = ((Date.now()-startTime)/1000).toFixed(1)+'s'; }, 100);
-        renderQuestion();
+        supabaseClient.from('players').select('progress').eq('id', myId).single().then(({data}) => {
+            if(data && data.progress >= 100) {
+                document.getElementById('player-quiz-area').style.display = 'none';
+                document.getElementById('finished-msg').style.display = 'block';
+                return;
+            }
+            if(!currentQuestions || currentQuestions.length === 0) return;
+            myShuffledQuestions = [...currentQuestions].sort(()=>Math.random()-0.5);
+            myAnswerLog = []; currentQIdx = 0; startTime = Date.now();
+            timerInterval = setInterval(()=> { document.getElementById('timer-display').innerText = ((Date.now()-startTime)/1000).toFixed(1)+'s'; }, 100);
+            renderQuestion();
+        });
     }
 
     function renderQuestion() {
@@ -602,30 +587,23 @@
     // --- CONTROLS ---
     async function startGame() { await supabaseClient.from('sessions').update({ status: 'PLAYING' }).eq('id', activeSessionId); }
     async function endGame() { await supabaseClient.from('sessions').update({ status: 'ENDED' }).eq('id', activeSessionId); }
-    
-    // --- UI ---
+
+    // --- UI HELPERS ---
     async function updateLobby() {
         if(!activeSessionId) return;
-        const { data: players } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId);
-        const list = document.getElementById('lobby-list');
-        list.innerHTML = '';
-        if(players) {
-            document.getElementById('player-count').innerText = `${players.length} thí sinh đang đợi...`;
-            players.forEach(p => { list.innerHTML += `<div style="background:var(--card-bg); padding:5px; border-radius:8px; text-align:center; border:1px solid #ccc;"><div>${p.avatar}</div><div style="font-size:12px;">${p.name}</div></div>`; });
-        }
+        const { data } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId);
+        document.getElementById('lobby-list').innerHTML = data.map(p => `<div style="background:var(--card-bg);padding:5px;border-radius:8px;text-align:center;border:1px solid #ccc;color:var(--text-color);"><div>${p.avatar}</div><div style="font-size:12px;font-weight:bold;">${p.employee_id}</div><div style="font-size:12px;">${p.name}</div></div>`).join('');
+        document.getElementById('player-count').innerText = `${data.length} người chờ...`;
     }
-    
+
     async function updateLiveRanking() {
         if(!activeSessionId) return;
-        const { data: players } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).order('score', { ascending: false });
-        const panel = document.getElementById('live-ranking');
-        panel.innerHTML = '';
-        if(!players) return;
-        players.sort((a, b) => { if (a.score !== b.score) return b.score - a.score; if (a.time_taken === 0 && b.time_taken > 0) return 1; if (a.time_taken > 0 && b.time_taken === 0) return -1; return a.time_taken - b.time_taken; });
-        players.forEach((p, i) => {
-            const isFinished = p.progress >= 100;
-            panel.innerHTML += `<div class="racer-card ${isFinished ? 'finished' : ''}"><div class="racer-info"><span>#${i+1}</span><span>${p.avatar} ${p.name}</span></div><div class="racer-stats"><div>${p.score}đ</div><div>${isFinished ? p.time_taken.toFixed(1)+'s' : '...'}</div></div></div>`;
-        });
+        const { data } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).order('score', {ascending:false});
+        const html = data.map((p, i) => {
+            const done = p.progress >= 100;
+            return `<div class="racer-card ${done?'finished':''}"><div class="racer-info"><span>#${i+1}</span><span>${p.avatar} ${p.name}</span></div><div class="racer-stats"><div>${p.score}đ</div><div>${done?p.time_taken.toFixed(1)+'s':'...'}</div></div></div>`;
+        }).join('');
+        document.getElementById('live-ranking').innerHTML = html;
     }
 
     async function showResults() {
@@ -633,43 +611,49 @@
         document.getElementById('rpt-company').innerText = currentCompanyName;
         document.getElementById('rpt-contest').innerText = activeSessionName;
         document.getElementById('rpt-time').innerText = "Ngày tổ chức: " + new Date().toLocaleDateString('vi-VN');
-        const { data: players } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId);
-        const board = document.getElementById('final-leaderboard');
-        board.innerHTML = '';
-        if(!players) return;
-        players.sort((a, b) => { if (a.score !== b.score) return b.score - a.score; if (a.time_taken === 0) return 1; if (b.time_taken === 0) return -1; return a.time_taken - b.time_taken; });
-        players.forEach((p, i) => {
-            let color = i === 0 ? '#fdcb6e' : (i === 1 ? '#b2bec3' : (i === 2 ? '#e17055' : '#fff'));
-            board.innerHTML += `<div style="display:flex; justify-content:space-between; padding:10px; margin:5px 0; background:${color}; border-radius:8px; font-weight:bold; color:#2d3436;"><span>#${i+1} ${p.avatar} ${p.name} (${p.employee_id})</span><span>${p.score}đ - ${p.time_taken.toFixed(2)}s</span></div>`;
-        });
+        const { data } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).order('score', {ascending:false});
+        const html = data.map((p, i) => {
+            let color = i === 0 ? '#fdcb6e' : (i === 1 ? '#b2bec3' : (i === 2 ? '#e17055' : 'var(--card-bg)'));
+            return `<div style="display:flex; justify-content:space-between; padding:15px; margin:5px 0; background:${color}; border-radius:8px; font-weight:bold; border:1px solid #ccc;"><span>#${i+1} ${p.avatar} ${p.name} (${p.employee_id})</span><span>${p.score}đ - ${p.time_taken.toFixed(2)}s</span></div>`;
+        }).join('');
+        document.getElementById('final-leaderboard').innerHTML = html;
     }
-    
-    // EXPORT
-    function downloadExcelTemplate() { const ws = XLSX.utils.aoa_to_sheet([["Câu hỏi", "A", "B", "C", "D", "Đáp án (A/B/C/D)"], ["1+1=?", "1", "2", "3", "4", "B"]]); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "CauHoi"); XLSX.writeFile(wb, "Mau.xlsx"); }
+
+    function downloadExcelTemplate() {
+        const ws = XLSX.utils.aoa_to_sheet([["Câu hỏi", "A", "B", "C", "D", "Đáp án (A/B/C/D)"], ["Thẻ an toàn có giá trị bao lâu?", "1 tháng", "3 tháng", "6 tháng", "1 năm", "C"]]);
+        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "CauHoi"); XLSX.writeFile(wb, "Mau_Cau_Hoi.xlsx");
+    }
+
     async function exportToExcel() {
-        const { data: players } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).order('score', { ascending: false });
-        const excelData = players.map((p, index) => {
-            let logData = {}; try { const logs = p.log ? JSON.parse(p.log) : []; logs.forEach((l, idx) => { logData[`Câu ${idx + 1}`] = `${l.chosen} (${l.result})`; }); } catch (e) {}
-            return { "Hạng": index + 1, "Số Thẻ": p.employee_id, "Tên": p.name, "Điểm": p.score, "TG": p.time_taken.toFixed(2), ...logData };
+        const { data } = await supabaseClient.from('players').select('*').eq('session_id', activeSessionId).order('score', {ascending:false});
+        const ex = data.map((p,i) => {
+            let l = {}; try { const gs=JSON.parse(p.log); gs.forEach((g,j)=>{l[`Câu ${j+1}`]=`${g.chosen} (${g.result})`;}); } catch(e){}
+            return { "Hạng":i+1, "Số Thẻ":p.employee_id, "Tên":p.name, "Điểm":p.score, "TG":p.time_taken.toFixed(2), ...l };
         });
-        const ws = XLSX.utils.json_to_sheet(excelData); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "KQ"); XLSX.writeFile(wb, "KetQua.xlsx");
+        const ws = XLSX.utils.json_to_sheet(ex); const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "KQ"); XLSX.writeFile(wb, `KetQua_${activeSessionName}.xlsx`);
     }
+
     function exportToPDF() {
         const el = document.getElementById('result-screen');
-        const btnArea = document.getElementById('admin-export-area');
-        const backBtn = document.getElementById('player-home-btn'); 
-        const mainHeader = document.querySelector('.header-info');
-        btnArea.style.display = 'none'; backBtn.style.display = 'none'; mainHeader.style.display = 'none';
+        document.getElementById('admin-export-area').style.display = 'none';
+        document.querySelector('.header-info').style.display = 'none';
         document.getElementById('report-header').style.display = 'block';
         
-        html2pdf().set({ margin:0.5, filename:'BaoCao.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} }).from(document.body).save().then(()=>{
-            btnArea.style.display = 'block'; backBtn.style.display = 'block'; mainHeader.style.display = 'block';
+        html2pdf().set({ margin:0.5, filename:`BaoCao_${activeSessionName}.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'in',format:'letter',orientation:'portrait'} }).from(document.body).save().then(()=>{
+            document.getElementById('admin-export-area').style.display = 'block';
+            document.querySelector('.header-info').style.display = 'block';
+            document.getElementById('report-header').style.display = 'none';
         });
     }
 
     function switchScreen(id) { 
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); 
         document.getElementById(id).classList.add('active'); 
+        if(id === 'admin-settings-screen') fetchSettingsForAdmin();
+        if(id === 'welcome-screen') {
+            // Khi về trang chủ thì tự reset tên phòng trên header
+            activeSessionId = null; activeSessionName = ""; updateHeaderContext();
+        }
     }
 </script>
 
